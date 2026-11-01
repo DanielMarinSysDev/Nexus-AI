@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CYBER_SCALE // AI Super-Resolution & Vector Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="cyber-terminal">
+  <div class="scanline-overlay"></div>
+
+  <!-- Header HUD -->
+  <header class="hud-header">
+    <div class="brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24" width="22" height="22" stroke="currentColor" fill="none" stroke-width="2">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+          <polyline points="2 17 12 22 22 17"></polyline>
+          <polyline points="2 12 12 17 22 12"></polyline>
+        </svg>
+      </div>
+      <div class="brand-titles">
+        <h1>NEXUS<span class="accent-blue">_CORE</span> <span class="tag">v3.0</span></h1>
+        <p class="subtitle">LOCAL AI UPSCALER // RUST SVG TRACER // OUTPAINT MATRIX</p>
+      </div>
+    </div>
+
+    <!-- Mode Navigation Tabs -->
+    <nav class="hud-nav-tabs">
+      <button class="nav-tab active" data-tab="upscale">
+        <span class="tab-dot"></span> 01. ESCALADO HD
+      </button>
+      <button class="nav-tab" data-tab="dtf">
+        <span class="tab-dot"></span> 02. DTF TEXTIL // SEMITONOS
+      </button>
+    </nav>
+
+    <div class="system-status-box">
+      <div class="stat-item" id="stat-gpu-box" title="Hardware Detectado">
+        <span class="label">GPU:</span>
+        <span class="val text-cyan" id="hud-gpu-val">DETECTANDO...</span>
+      </div>
+      <div class="stat-item" id="stat-cpu-box" title="Procesador">
+        <span class="label">CPU:</span>
+        <span class="val text-white" id="hud-cpu-val">--</span>
+      </div>
+      <div class="stat-item">
+        <span class="label">VULKAN:</span>
+        <span class="val text-green" id="hud-vulkan-val">ONLINE</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="hud-main">
+    <!-- Controls Sidebar -->
+    <aside class="panel controls-panel">
+      <!-- TAB 1: UPSCALE CONTROLS -->
+      <div id="tab-controls-upscale" class="tab-control-group">
+        <div class="panel-header">
+          <span class="bracket">[</span> <span class="title">PARAM // ESCALADO</span> <span class="bracket">]</span>
+          <span class="panel-code">0x7F</span>
+        </div>
+        <div class="panel-body">
+          <div class="form-group">
+            <label class="group-label">FACTOR DE MULTIPLICACIÓN</label>
+            <div class="segmented-control" id="scale-selector">
+              <button type="button" class="seg-btn" data-scale="1">1x (Solo HD)</button>
+              <button type="button" class="seg-btn" data-scale="2">x2</button>
+              <button type="button" class="seg-btn active" data-scale="4">x4</button>
+              <button type="button" class="seg-btn" data-scale="8">x8</button>
+            </div>
+            <span class="param-tip">1x restaura nitidez al tamaño original. x4 recomendado para fotos nítidas.</span>
+          </div>
+
+          <div class="form-group">
+            <label class="group-label">MODELO NEURONAL</label>
+            <div class="model-cards">
+              <label class="model-card active">
+                <input type="radio" name="upscale-model" value="realesrgan-x4plus" checked>
+                <div class="card-content">
+                  <span class="model-name">Foto Real / Ultra HD</span>
+                  <span class="model-desc">Rostros, piel, texturas reales y eliminación de compresión JPG.</span>
+                  <span class="model-badge">ESRGAN-Plus</span>
+                </div>
+              </label>
+
+              <label class="model-card">
+                <input type="radio" name="upscale-model" value="realesr-animevideov3">
+                <div class="card-content">
+                  <span class="model-name">Ultra Rápido / Animación</span>
+                  <span class="model-desc">Ligero (1MB), velocidad máxima para K620 sin calentamiento.</span>
+                  <span class="model-badge fast">Max-Speed</span>
+                </div>
+              </label>
+
+              <label class="model-card">
+                <input type="radio" name="upscale-model" value="realesrgan-x4plus-anime">
+                <div class="card-content">
+                  <span class="model-name">Anime / Arte Digital</span>
+                  <span class="model-desc">Líneas limpias, colores vivos y bordes hiperdefinidos.</span>
+                  <span class="model-badge fast">Anime-HD</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div class="tile-slider-header">
+              <label class="group-label">VRAM SAFETY TILE</label>
+              <span class="tile-val" id="tile-size-val">128 px</span>
+            </div>
+            <input type="range" id="tile-slider" min="32" max="256" step="32" value="128" class="cyber-range">
+            <span class="param-tip">128 px es el punto óptimo de velocidad y memoria para la Quadro K620.</span>
+          </div>
+
+          <button id="btn-process-upscale" class="cyber-button primary" disabled>
+            <span class="btn-content">
+              <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+              </svg>
+              EJECUTAR SUPER-RESOLUCIÓN
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <!-- TAB 2: DTF TEXTIL CONTROLS -->
+      <div id="tab-controls-dtf" class="tab-control-group" style="display: none;">
+        <div class="panel-header">
+          <span class="bracket">[</span> <span class="title">PARAM // DTF_TEXTIL_HALFTONE</span> <span class="bracket">]</span>
+          <span class="panel-code">0xD7</span>
+        </div>
+        <div class="panel-body">
+          <div class="form-group">
+            <label class="group-label">MÉTODO DE EXTRACCIÓN DE FONDO</label>
+            <div class="segmented-control" id="dtf-bg-selector">
+              <button type="button" class="seg-btn active" data-bg="ai">IA Silueta</button>
+              <button type="button" class="seg-btn" data-bg="color">Cuentagotas / Color</button>
+              <button type="button" class="seg-btn" data-bg="none">Conservar Fondo</button>
+            </div>
+          </div>
+
+          <!-- Opciones de Cuentagotas / Color Key -->
+          <div id="dtf-color-key-options" style="display: none; padding: 10px; background: rgba(0, 0, 0, 0.25); border: 1px solid var(--border-dim); border-radius: 6px; margin-bottom: 12px;">
+            <div class="form-group" style="margin-bottom: 8px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <label class="group-label" style="margin-bottom: 0;">COLOR A ELIMINAR</label>
+                <div style="display: flex; gap: 6px;">
+                  <button type="button" id="btn-pick-eyedropper" class="cyber-button secondary" style="padding: 2px 8px; font-size: 11px;">
+                    Pipeta (Pantalla)
+                  </button>
+                </div>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <input type="color" id="dtf-color-key" value="#000000" style="width: 44px; height: 32px; border: 1px solid var(--border-dim); border-radius: 4px; background: transparent; cursor: pointer;">
+                <span id="dtf-color-key-hex" style="font-family: var(--font-mono); font-size: 12px; color: var(--text-cyan);">#000000</span>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 8px;">
+              <div class="tile-slider-header">
+                <label class="group-label">TOLERANCIA (GAMA)</label>
+                <span class="tile-val" id="dtf-color-tol-val">25</span>
+              </div>
+              <input type="range" id="dtf-color-tol-slider" min="0" max="120" step="5" value="25" class="cyber-range">
+              <span class="param-tip">0 = estricto al color exacto; 25-60 = abarca degradados y compresión JPG.</span>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 8px;">
+              <div class="tile-slider-header">
+                <label class="group-label">SUAVIZADO DE BORDE (FEATHER)</label>
+                <span class="tile-val" id="dtf-color-feather-val">2 px</span>
+              </div>
+              <input type="range" id="dtf-color-feather-slider" min="0" max="6" step="1" value="2" class="cyber-range">
+              <span class="param-tip">Transición suave y antialiasing en los contornos eliminados.</span>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 0;">
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 12px; color: var(--text-main);">
+                <input type="checkbox" id="dtf-color-contiguous" checked style="accent-color: var(--accent-cyan); cursor: pointer;">
+                <span><strong>Solo fondo exterior (Contiguo)</strong></span>
+              </label>
+              <span class="param-tip" style="margin-top: 2px;">Protege el negro interior del personaje y ropa para que no desaparezca.</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="group-label">SUPRESIÓN DE HALO BLANCO (CHOKE)</label>
+            <div class="segmented-control" id="dtf-choke-selector">
+              <button type="button" class="seg-btn" data-choke="0">Desactivado</button>
+              <button type="button" class="seg-btn" data-choke="1">1 px (Sutil)</button>
+              <button type="button" class="seg-btn active" data-choke="2">2 px (Óptimo DTF)</button>
+              <button type="button" class="seg-btn" data-choke="3">3 px (Agresivo)</button>
+            </div>
+            <span class="param-tip">Elimina el típico filete blanco en prendas oscuras recoloreando bordes semitransparentes.</span>
+          </div>
+
+          <div class="form-group">
+            <label class="group-label">TRAMA DE SEMITONOS (HALFTONE)</label>
+            <div class="segmented-control" id="dtf-halftone-toggle">
+              <button type="button" class="seg-btn active" data-halftone="true">Activar Trama</button>
+              <button type="button" class="seg-btn" data-halftone="false">Solo Alpha Limpio</button>
+            </div>
+          </div>
+
+          <div id="dtf-halftone-options">
+            <div class="form-group">
+              <label class="group-label">MODALIDAD DE COLOR DTF</label>
+              <div class="segmented-control" id="dtf-mode-selector">
+                <button type="button" class="seg-btn active" data-mode="color">Color Original</button>
+                <button type="button" class="seg-btn" data-mode="mono">Monocromático</button>
+                <button type="button" class="seg-btn" data-mode="palette">Paleta DTF</button>
+                <button type="button" class="seg-btn" data-mode="white">Tinta Blanca (Film)</button>
+              </div>
+            </div>
+
+            <div class="form-group" id="dtf-color-picker-group" style="display: none;">
+              <label class="group-label">COLOR MONOCROMÁTICO (CONSERVA MATICES)</label>
+              <input type="color" id="dtf-tint-color" value="#00e5ff" style="width: 100%; height: 38px; border: 1px solid var(--border-dim); border-radius: 6px; background: transparent; cursor: pointer;">
+            </div>
+
+            <div class="form-group" id="dtf-palette-group" style="display: none;">
+              <label class="group-label">PALETA DE COLORES DTF</label>
+              <div id="palette-chips-container" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px;">
+                <!-- Chips de colores insertados dinámicamente -->
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <input type="color" id="dtf-new-palette-color" value="#ff3b30" style="width: 44px; height: 34px; border: 1px solid var(--border-dim); border-radius: 6px; background: transparent; cursor: pointer;">
+                <button type="button" id="btn-add-palette-color" class="cyber-button secondary" style="flex: 1; padding: 4px 10px; font-size: 11px;">
+                  + AÑADIR A PALETA
+                </button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div class="tile-slider-header">
+                <label class="group-label">TAMAÑO DE PUNTO (LPI / RESOLUCIÓN)</label>
+                <span class="tile-val" id="dtf-dot-size-val">6 px</span>
+              </div>
+              <input type="range" id="dtf-dot-slider" min="3" max="14" step="1" value="6" class="cyber-range">
+              <span class="param-tip">Puntos más pequeños = mayor detalle; puntos mayores = máxima transpirabilidad en tela.</span>
+            </div>
+
+            <div class="form-group">
+              <label class="group-label">ÁNGULO DE TRAMA</label>
+              <div class="segmented-control" id="dtf-angle-selector">
+                <button type="button" class="seg-btn" data-angle="22.5">22.5°</button>
+                <button type="button" class="seg-btn active" data-angle="45">45° (Estándar)</button>
+                <button type="button" class="seg-btn" data-angle="67.5">67.5°</button>
+              </div>
+            </div>
+          </div>
+
+          <button id="btn-process-dtf" class="cyber-button primary" disabled>
+            <span class="btn-content">
+              <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2">
+                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
+              </svg>
+              GENERAR TEXTIL DTF
+            </span>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Workspace Viewport -->
+    <section class="panel workspace-panel">
+      <div class="panel-header">
+        <span class="bracket">[</span> <span class="title">VIEWPORT // NEURAL_WORKSPACE</span> <span class="bracket">]</span>
+        <div class="hud-metrics" id="process-metrics" style="display: none;">
+          <span>TIEMPO: <strong id="metric-time">0.00s</strong></span>
+          <span>ORIGEN: <strong id="metric-orig-dim">0x0</strong></span>
+          <span>RESULTADO: <strong id="metric-new-dim">0x0</strong></span>
+        </div>
+      </div>
+
+      <div class="panel-body workspace-content">
+        <!-- Dropzone State -->
+        <div id="dropzone" class="dropzone-box">
+          <input type="file" id="file-input" accept="image/png, image/jpeg, image/webp, .jfif, image/*" class="file-hidden">
+          <div class="dropzone-inner" id="dropzone-content">
+            <div class="reticle">
+              <div class="reticle-corner top-left"></div>
+              <div class="reticle-corner top-right"></div>
+              <div class="reticle-corner bottom-left"></div>
+              <div class="reticle-corner bottom-right"></div>
+              <svg class="upload-icon" viewBox="0 0 24 24" width="48" height="48" stroke="currentColor" fill="none" stroke-width="1.5">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+            </div>
+            <h3 id="dropzone-title">HAZ CLIC O ARRASTRA TU IMAGEN AQUÍ</h3>
+            <p id="dropzone-subtitle">Explorar archivos de imagen (PNG, JPG, WEBP)</p>
+            <div class="drop-specs">
+              <span>ESCALADO IA</span> • <span>EXPANSIÓN DE LIENZO</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Processing Laser Overlay -->
+        <div id="processing-view" class="processing-overlay" style="display: none;">
+          <div class="scanner-bar"></div>
+          <div class="cyber-spinner"></div>
+          <p class="processing-title" id="processing-title-text">PROCESANDO EN HARDWARE LOCAL...</p>
+          <p class="processing-subtitle" id="processing-subtitle-text">Aceleración activa en GPU NVIDIA Quadro K620</p>
+          <div class="progress-track">
+            <div class="progress-bar-glow"></div>
+          </div>
+        </div>
+
+        <!-- View 1: Upscale Split Comparison -->
+        <div id="result-view-upscale" class="result-container" style="display: none;">
+          <div class="comparison-wrapper" id="comparison-box">
+            <img id="img-upscaled" class="comp-img upscaled" alt="Imagen Escalada">
+            <div class="comp-original-wrapper" id="comp-slider-mask">
+              <img id="img-original" class="comp-img original" alt="Imagen Original">
+            </div>
+            <div class="comp-slider-handle" id="slider-handle">
+              <div class="slider-button">
+                <span>◀ ▶</span>
+              </div>
+            </div>
+            <div class="view-tag tag-left">ORIGINAL</div>
+            <div class="view-tag tag-right">ESCALADO IA (x<span id="label-scale">4</span>)</div>
+          </div>
+
+          <div class="result-actions-bar">
+            <button class="cyber-button secondary btn-reset-action">
+              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                <path d="M3 3v5h5"></path>
+              </svg>
+              NUEVA IMAGEN
+            </button>
+            <a id="btn-download-upscaled" class="cyber-button success" download="escalada.png">
+              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              DESCARGAR HD (PNG)
+            </a>
+          </div>
+        </div>
+
+        <!-- View 2: DTF Halftone / Transparent Viewport -->
+        <div id="result-view-dtf" class="result-container" style="display: none;">
+          <div class="dtf-preview-wrapper" id="dtf-preview-container" style="flex: 1; width: 100%; min-height: 500px; display: flex; align-items: center; justify-content: center; background: repeating-conic-gradient(#111827 0% 25%, #0b0f19 0% 50%) 50% / 20px 20px; overflow: hidden; position: relative; cursor: grab;">
+            <img id="img-dtf-processed" class="comp-img" alt="Resultado DTF Textil" style="position: relative; top: auto; left: auto; transform-origin: center center; transform: translate(0px, 0px) scale(1); max-width: 90%; max-height: 90%; object-fit: contain; transition: transform 0.05s ease-out; pointer-events: none; user-select: none;">
+            <div style="position: absolute; bottom: 12px; left: 16px; background: rgba(0,0,0,0.65); padding: 4px 10px; border-radius: 4px; font-size: 11px; color: var(--text-dim); backdrop-filter: blur(4px); pointer-events: none;">
+              <span>Rueda: Zoom | Arrastrar: Mover | Doble Clic: Reset</span>
+            </div>
+            <div id="dtf-zoom-level" style="position: absolute; bottom: 12px; right: 16px; background: rgba(0,0,0,0.65); padding: 4px 10px; border-radius: 4px; font-size: 11px; color: var(--text-cyan); backdrop-filter: blur(4px); pointer-events: none;">
+              100%
+            </div>
+          </div>
+
+          <div class="result-actions-bar">
+            <button class="cyber-button secondary btn-reset-action">
+              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                <path d="M3 3v5h5"></path>
+              </svg>
+              NUEVA IMAGEN
+            </button>
+            <a id="btn-download-dtf" class="cyber-button success" download="dtf_print_ready.png">
+              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              DESCARGAR DTF READY (PNG)
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

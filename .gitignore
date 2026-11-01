@@ -1,0 +1,25 @@
+# Entornos virtuales y dependencias locales
+venv/
+.venv/
+runtime/
+__pycache__/
+*.pyc
+
+# Rust / Tauri build artifacts
+src-tauri/target/
+
+# Directorios de trabajo y procesamiento de usuario
+uploads/*
+!uploads/.gitkeep
+outputs/*
+!outputs/.gitkeep
+
+# Modelos y archivos temporales
+output_*.png
+temp_*.png
+*.log
+
+# Caches locales
+*.cache
+hardware_cache.json
+
