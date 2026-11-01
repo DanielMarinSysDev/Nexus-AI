@@ -26,7 +26,7 @@ Si deseas compilar o modificar el código fuente:
 
 ```bash
 # 1. Clonar el repositorio
-git clone <URL_DEL_REPOSITORIO>
+git clone https://github.com/DanielMarinSysDev/Nexus-AI
 cd Escalado
 
 # 2. Crear y activar entorno virtual de Python
